@@ -55,7 +55,18 @@ function RadarLayer({ host, frame, opacity }: { host: string; frame: RadarFrame 
   if (!frame) return null
   // color 4 = "Universal Blue" scheme, smooth=1, snow=1
   const url = `${host}${frame.path}/256/{z}/{x}/{y}/4/1_1.png`
-  return <TileLayer key={frame.path} url={url} opacity={opacity} />
+  // RainViewer radar is coarse; cap native zoom so Leaflet upscales instead of
+  // requesting higher-zoom tiles that return "zoom level not supported".
+  return (
+    <TileLayer
+      key={frame.path}
+      url={url}
+      opacity={opacity}
+      maxNativeZoom={10}
+      minNativeZoom={1}
+      tileSize={256}
+    />
+  )
 }
 
 export default function RadarMap({ lat, lon, label }: RadarMapProps) {
@@ -115,6 +126,8 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
         <MapContainer
           center={[lat, lon]}
           zoom={8}
+          minZoom={3}
+          maxZoom={11}
           scrollWheelZoom={false}
           style={{ height: '100%', width: '100%' }}
           attributionControl={false}
@@ -122,6 +135,8 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             subdomains={['a', 'b', 'c', 'd']}
+            maxNativeZoom={19}
+            minNativeZoom={0}
           />
           <RadarLayer host={host} frame={current} opacity={0.7} />
           <CircleMarker
