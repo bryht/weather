@@ -5,6 +5,7 @@ import type { Forecast, GeoLocation } from './api/types'
 import CurrentConditions from './components/CurrentConditions'
 import DailyForecast from './components/DailyForecast'
 import HourlyForecast from './components/HourlyForecast'
+import InstallPrompt from './components/InstallPrompt'
 import PrecipChart from './components/PrecipChart'
 import RadarMap from './components/RadarMap'
 import SearchBar from './components/SearchBar'
@@ -145,6 +146,7 @@ export default function App() {
           <span>Inspired by Buienradar</span>
         </footer>
       </div>
+      <InstallPrompt />
     </div>
   )
 }
