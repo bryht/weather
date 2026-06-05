@@ -20,6 +20,8 @@ html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -86,7 +88,7 @@ button {
 }
 
 .app-inner {
-  max-width: 980px;
+  max-width: 620px;
   margin: 0 auto;
   padding: 20px 18px 40px;
 }
@@ -194,9 +196,16 @@ button {
   border: 1px solid var(--card-border);
   border-radius: 14px;
   box-shadow: var(--shadow);
-  z-index: 1000;
+  z-index: 2000;
   max-height: 320px;
   overflow-y: auto;
+}
+
+/* Keep Leaflet's own panes/controls below our UI overlays */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 400;
 }
 
 .search-result {
@@ -265,10 +274,10 @@ button {
   font-size: 15px;
 }
 
-/* Grid layout */
+/* Layout — a clean mobile-first single column that scales to desktop */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   transition: opacity 0.3s;
 }

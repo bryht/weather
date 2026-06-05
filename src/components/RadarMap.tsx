@@ -29,6 +29,27 @@ function Recenter({ lat, lon }: { lat: number; lon: number }) {
   return null
 }
 
+/**
+ * react-leaflet measures the map at mount, before the card has its final size,
+ * which leaves tiles mis-sized/grey. Recompute the size once laid out and on
+ * every container resize.
+ */
+function FixSize() {
+  const map = useMap()
+  useEffect(() => {
+    const fix = () => map.invalidateSize()
+    const raf = requestAnimationFrame(fix)
+    const t = setTimeout(fix, 300)
+    window.addEventListener('resize', fix)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(t)
+      window.removeEventListener('resize', fix)
+    }
+  }, [map])
+  return null
+}
+
 /** Animated rain radar overlay sourced from the free RainViewer API. */
 function RadarLayer({ host, frame, opacity }: { host: string; frame: RadarFrame | null; opacity: number }) {
   if (!frame) return null
@@ -109,6 +130,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
             pathOptions={{ color: '#fff', weight: 2, fillColor: '#ff5252', fillOpacity: 1 }}
           />
           <Recenter lat={lat} lon={lon} />
+          <FixSize />
         </MapContainer>
       </div>
       <div className="radar-controls">
