@@ -26,6 +26,20 @@ body {
   font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* Smooth momentum scrolling for horizontal strips on touch devices */
+.hourly-scroll,
+.search-results {
+  -webkit-overflow-scrolling: touch;
+}
+
+button {
+  touch-action: manipulation;
 }
 
 .app {
@@ -627,6 +641,10 @@ body {
 
 /* Responsive */
 @media (max-width: 680px) {
+  .app-inner {
+    padding: 16px 14px 32px;
+  }
+
   .grid {
     grid-template-columns: 1fr;
   }
@@ -654,5 +672,55 @@ body {
 
   .search {
     max-width: none;
+  }
+
+  /* Comfortable touch targets on phones */
+  .loc-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .radar-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .search-result {
+    padding: 12px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+  .current-main {
+    gap: 12px;
+  }
+
+  .current-temp {
+    font-size: 40px;
+  }
+
+  .current-icon {
+    font-size: 46px;
+  }
+
+  .current-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .daily-row {
+    grid-template-columns: 42px 24px 46px 34px 1fr 34px;
+    gap: 8px;
+  }
+
+  .precip-graph {
+    height: 100px;
+  }
+}
+
+/* Honour the home-indicator inset when installed as a standalone app */
+@media (display-mode: standalone) {
+  .app-footer {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
