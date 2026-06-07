@@ -17,9 +17,11 @@ export interface CurrentWeather {
   isDay: boolean
   windSpeed: number
   windDirection: number
+  windGust: number
   humidity: number
   precipitation: number
   pressure: number
+  uvIndex: number
 }
 
 export interface HourlyPoint {
@@ -41,6 +43,7 @@ export interface DailyPoint {
   sunrise: string
   sunset: string
   windSpeedMax: number
+  uvIndexMax: number
 }
 
 /** A single point in the short-term precipitation graph (15-minute steps). */
@@ -48,6 +51,9 @@ export interface PrecipPoint {
   time: string
   precipitation: number
 }
+
+/** Measurement system the user can toggle between. */
+export type UnitSystem = 'metric' | 'imperial'
 
 export interface Forecast {
   current: CurrentWeather
