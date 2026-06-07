@@ -12,12 +12,18 @@ an **animated rain radar**, a short-term precipitation graph, and hourly /
   [RainViewer](https://www.rainviewer.com/), play/pause and a time scrubber.
 - 📊 **Precipitation graph** — Buienradar's signature short-term (next ~2 h)
   rain forecast in 15-minute steps.
-- 🌡️ **Current conditions** — temperature, feels-like, wind, humidity,
-  pressure and precipitation.
-- 🕐 **Hourly forecast** — next 24 hours with rain probability.
+- 🌡️ **Current conditions** — temperature, feels-like, wind (with a direction
+  arrow), gusts, humidity, pressure, precipitation and UV index.
+- 🕐 **Hourly forecast** — next 24 hours with a temperature curve and rain
+  probability.
+- ☀️ **Sun & UV card** — sunrise / sunset with a live sun-position arc.
 - 📅 **7-day forecast** — daily highs/lows with a temperature range bar.
+- 🔁 **°C / °F unit toggle** — switches temperature, wind and precipitation
+  units, and remembers your choice.
 - 🔍 **Location search** + 📍 **geolocation**, with your last place remembered.
-- 🎨 Adaptive background that follows the current weather and day/night.
+- 🎨 **Animated, condition-aware backdrop** — rain streaks, snowfall, twinkling
+  stars and a glowing sun that follow the weather and time of day (and respect
+  `prefers-reduced-motion`).
 
 No API keys required — all data comes from the free
 [Open-Meteo](https://open-meteo.com/) API (CORS-enabled).

@@ -1,14 +1,16 @@
 :root {
   --bg-top: #0b1f3a;
   --bg-bottom: #06101f;
-  --card: rgba(255, 255, 255, 0.08);
+  --card: rgba(255, 255, 255, 0.07);
   --card-border: rgba(255, 255, 255, 0.12);
+  --card-hover: rgba(255, 255, 255, 0.1);
   --text: #f2f6ff;
   --muted: rgba(242, 246, 255, 0.62);
   --accent: #4fc3f7;
   --rain: #2a9df4;
-  --radius: 18px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --radius: 20px;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  --ring: 0 0 0 3px rgba(79, 195, 247, 0.45);
   color-scheme: dark;
 }
 
@@ -25,13 +27,20 @@ body {
 }
 
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: none;
+}
+
+/* Consistent, on-brand keyboard focus ring */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 8px;
 }
 
 /* Smooth momentum scrolling for horizontal strips on touch devices */
@@ -45,12 +54,111 @@ button {
 }
 
 .app {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   min-height: 100dvh;
   background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
   transition: background 0.8s ease;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
     env(safe-area-inset-left);
+  overflow: hidden;
+}
+
+/* ---- Animated weather backdrop ---- */
+.weather-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-glow {
+  position: absolute;
+  inset: -20% -20% auto -20%;
+  height: 70%;
+  background: radial-gradient(
+    60% 60% at 50% 0%,
+    rgba(255, 255, 255, 0.1),
+    transparent 70%
+  );
+}
+
+/* Sun: a soft glowing orb on clear days */
+.bg-sun {
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 224, 130, 0.55), rgba(255, 196, 92, 0.12) 55%, transparent 70%);
+  filter: blur(4px);
+  animation: sun-pulse 8s ease-in-out infinite;
+}
+
+@keyframes sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+/* Stars at night */
+.bg-stars {
+  position: absolute;
+  inset: 0;
+}
+
+.star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: twinkle linear infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.7); }
+  50% { opacity: 0.95; transform: scale(1); }
+}
+
+/* Rain streaks */
+.bg-rain {
+  position: absolute;
+  inset: 0;
+}
+
+.drop {
+  position: absolute;
+  top: -12%;
+  width: 1.5px;
+  height: 70px;
+  background: linear-gradient(transparent, rgba(180, 215, 255, 0.85));
+  animation: rain-fall linear infinite;
+}
+
+@keyframes rain-fall {
+  to { transform: translateY(120vh); }
+}
+
+/* Snowfall */
+.bg-snow {
+  position: absolute;
+  inset: 0;
+}
+
+.flake {
+  position: absolute;
+  top: -6%;
+  color: #fff;
+  line-height: 1;
+  animation: snow-fall linear infinite;
+}
+
+@keyframes snow-fall {
+  0% { transform: translateY(-6vh) translateX(0); }
+  50% { transform: translateY(50vh) translateX(24px); }
+  100% { transform: translateY(110vh) translateX(-12px); }
 }
 
 /* Condition-based background themes */
@@ -88,9 +196,11 @@ button {
 }
 
 .app-inner {
-  max-width: 620px;
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 20px 18px 40px;
+  padding: 22px 18px 40px;
 }
 
 /* Header */
@@ -100,7 +210,7 @@ button {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .brand {
@@ -112,6 +222,40 @@ button {
 .brand-mark {
   font-size: 32px;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  animation: brand-float 6s ease-in-out infinite;
+}
+
+@keyframes brand-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Unit (°C/°F) toggle */
+.unit-toggle {
+  display: inline-flex;
+  margin-left: 4px;
+  padding: 3px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+}
+
+.unit-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.unit-toggle button.active {
+  background: linear-gradient(180deg, var(--accent), var(--rain));
+  color: #04233a;
 }
 
 .brand-title {
@@ -274,6 +418,35 @@ button {
   font-size: 15px;
 }
 
+/* Skeleton loaders */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  to { transform: translateX(100%); }
+}
+
+.skeleton-current { height: 150px; }
+.skeleton-block { height: 170px; }
+.skeleton-radar { height: 360px; }
+
 /* Layout — a clean mobile-first single column that scales to desktop */
 .grid {
   display: flex;
@@ -287,13 +460,49 @@ button {
 }
 
 .card {
+  position: relative;
   background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
   padding: 18px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   box-shadow: var(--shadow);
+  transition: border-color 0.25s, background 0.25s, transform 0.25s;
+  animation: card-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* Subtle top highlight for a glassy edge */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 40%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--card-hover);
+}
+
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stagger card entrances down the column */
+.grid > .card:nth-child(1) { animation-delay: 0.02s; }
+.grid > .card:nth-child(2) { animation-delay: 0.08s; }
+.grid > .card:nth-child(3) { animation-delay: 0.14s; }
+.grid > .card:nth-child(4) { animation-delay: 0.2s; }
+.grid > .card:nth-child(5) { animation-delay: 0.26s; }
+.grid > .card:nth-child(6) { animation-delay: 0.32s; }
 
 .card-head {
   display: flex;
@@ -362,6 +571,12 @@ button {
   margin-top: 4px;
 }
 
+.current-feels {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 .current-location {
   font-size: 13px;
   color: var(--muted);
@@ -391,6 +606,24 @@ button {
 .stat-value {
   font-size: 15px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wind-arrow {
+  display: inline-block;
+  font-size: 13px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.uv-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
 }
 
 /* Precipitation chart */
@@ -526,25 +759,37 @@ button {
   text-decoration: underline;
 }
 
-/* Hourly forecast */
+/* Hourly forecast — scrollable strip with a temperature curve overlay */
 .hourly-scroll {
-  display: flex;
-  gap: 8px;
   overflow-x: auto;
   padding-bottom: 6px;
   scrollbar-width: thin;
 }
 
+.hourly-inner {
+  position: relative;
+  padding-top: 44px; /* room for the curve band (CURVE_H + a little) */
+}
+
+.hourly-curve {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  display: block;
+}
+
+.hourly-row {
+  display: flex;
+}
+
 .hourly-item {
-  flex: 0 0 auto;
+  flex: 0 0 60px;
+  width: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  min-width: 64px;
+  padding: 8px 0;
 }
 
 .hourly-time {
@@ -553,12 +798,12 @@ button {
 }
 
 .hourly-icon {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .hourly-temp {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .hourly-pop {
@@ -568,6 +813,91 @@ button {
 
 .hourly-pop.likely {
   color: var(--accent);
+  font-weight: 600;
+}
+
+/* Sun & UV card */
+.sun-state {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sun-arc-wrap {
+  padding: 4px 6px 0;
+}
+
+.sun-arc {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.sun-horizon {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.sun-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.sun-progress {
+  fill: none;
+  stroke: url(#arcGrad);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 138;
+  transition: stroke-dashoffset 0.8s ease;
+}
+
+.sun-dot {
+  fill: #fff3c4;
+  stroke: #ffcf66;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 6px rgba(255, 207, 102, 0.9));
+}
+
+.sun-times {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 12px;
+  gap: 10px;
+}
+
+.sun-time,
+.sun-uv {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sun-time.end {
+  text-align: right;
+}
+
+.sun-uv {
+  align-items: center;
+}
+
+.sun-time-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.sun-time-value {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* Daily forecast */
@@ -817,5 +1147,20 @@ button {
 @media (display-mode: standalone) {
   .app-footer {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Respect users who prefer reduced motion: kill decorative animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .weather-bg {
+    display: none;
   }
 }

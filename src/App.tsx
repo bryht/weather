@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchForecast } from './api/forecast'
 import { nearestPlace } from './api/geocoding'
-import type { Forecast, GeoLocation } from './api/types'
+import type { Forecast, GeoLocation, UnitSystem } from './api/types'
 import CurrentConditions from './components/CurrentConditions'
 import DailyForecast from './components/DailyForecast'
 import HourlyForecast from './components/HourlyForecast'
@@ -9,10 +9,14 @@ import InstallPrompt from './components/InstallPrompt'
 import PrecipChart from './components/PrecipChart'
 import RadarMap from './components/RadarMap'
 import SearchBar from './components/SearchBar'
+import SunCard from './components/SunCard'
+import UnitToggle from './components/UnitToggle'
+import WeatherBackground from './components/WeatherBackground'
 import { locationLabel } from './utils/format'
 import { themeFor } from './utils/weatherCodes'
 
 const STORAGE_KEY = 'weather:location'
+const UNITS_KEY = 'weather:units'
 
 // Amsterdam — a nod to Buienradar's Dutch roots — as the default first view.
 const DEFAULT_LOCATION: GeoLocation = {
@@ -34,34 +38,47 @@ function loadSavedLocation(): GeoLocation {
   return DEFAULT_LOCATION
 }
 
+function loadSavedUnits(): UnitSystem {
+  try {
+    return localStorage.getItem(UNITS_KEY) === 'imperial' ? 'imperial' : 'metric'
+  } catch {
+    return 'metric'
+  }
+}
+
 export default function App() {
   const [location, setLocation] = useState<GeoLocation>(loadSavedLocation)
+  const [units, setUnits] = useState<UnitSystem>(loadSavedUnits)
   const [forecast, setForecast] = useState<Forecast | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [locating, setLocating] = useState(false)
 
-  const loadForecast = useCallback(async (loc: GeoLocation) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await fetchForecast(loc.latitude, loc.longitude)
-      setForecast(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load the forecast.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const loadForecast = useCallback(
+    async (loc: GeoLocation, unitSystem: UnitSystem) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchForecast(loc.latitude, loc.longitude, unitSystem)
+        setForecast(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not load the forecast.')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
 
   useEffect(() => {
-    loadForecast(location)
+    loadForecast(location, units)
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(location))
+      localStorage.setItem(UNITS_KEY, units)
     } catch {
       /* ignore */
     }
-  }, [location, loadForecast])
+  }, [location, units, loadForecast])
 
   const handleUseMyLocation = useCallback(() => {
     if (!('geolocation' in navigator)) {
@@ -94,16 +111,18 @@ export default function App() {
 
   return (
     <div className={`app theme-${theme}`}>
+      <WeatherBackground theme={theme} />
       <div className="app-inner">
         <header className="app-header">
           <div className="brand">
             <span className="brand-mark" aria-hidden="true">
-              🌧️
+              🌦️
             </span>
             <div>
               <h1 className="brand-title">Weather</h1>
               <p className="brand-sub">Live rain radar &amp; forecast</p>
             </div>
+            <UnitToggle value={units} onChange={setUnits} />
           </div>
           <SearchBar
             onSelect={setLocation}
@@ -115,11 +134,11 @@ export default function App() {
         {error && (
           <div className="banner error">
             <span>{error}</span>
-            <button onClick={() => loadForecast(location)}>Retry</button>
+            <button onClick={() => loadForecast(location, units)}>Retry</button>
           </div>
         )}
 
-        {loading && !forecast && <div className="loading">Loading forecast…</div>}
+        {loading && !forecast && <LoadingSkeleton />}
 
         {forecast && (
           <main className={`grid ${loading ? 'is-stale' : ''}`}>
@@ -130,6 +149,9 @@ export default function App() {
             />
             <PrecipChart data={forecast.precip} unit={forecast.units.precipitation} />
             <RadarMap lat={location.latitude} lon={location.longitude} label={fullLabel} />
+            {forecast.daily[0] && (
+              <SunCard today={forecast.daily[0]} uvIndex={forecast.current.uvIndex} />
+            )}
             <HourlyForecast data={forecast.hourly} units={forecast.units} />
             <DailyForecast data={forecast.daily} units={forecast.units} />
           </main>
@@ -147,6 +169,18 @@ export default function App() {
         </footer>
       </div>
       <InstallPrompt />
+    </div>
+  )
+}
+
+/** Shimmering placeholder shown while the first forecast loads. */
+function LoadingSkeleton() {
+  return (
+    <div className="grid" aria-busy="true" aria-label="Loading forecast">
+      <div className="card skeleton skeleton-current" />
+      <div className="card skeleton skeleton-block" />
+      <div className="card skeleton skeleton-radar" />
+      <div className="card skeleton skeleton-block" />
     </div>
   )
 }

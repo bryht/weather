@@ -4,6 +4,7 @@ import type {
   Forecast,
   HourlyPoint,
   PrecipPoint,
+  UnitSystem,
 } from './types'
 
 const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast'
@@ -19,6 +20,7 @@ interface ForecastApiResponse {
     is_day: number
     wind_speed_10m: number
     wind_direction_10m: number
+    wind_gusts_10m: number
     relative_humidity_2m: number
     precipitation: number
     surface_pressure: number
@@ -45,14 +47,23 @@ interface ForecastApiResponse {
     sunrise: string[]
     sunset: string[]
     wind_speed_10m_max: number[]
+    uv_index_max: number[]
   }
 }
 
-export async function fetchForecast(lat: number, lon: number): Promise<Forecast> {
+export async function fetchForecast(
+  lat: number,
+  lon: number,
+  unitSystem: UnitSystem = 'metric',
+): Promise<Forecast> {
+  const imperial = unitSystem === 'imperial'
   const params = new URLSearchParams({
     latitude: lat.toFixed(4),
     longitude: lon.toFixed(4),
     timezone: 'auto',
+    temperature_unit: imperial ? 'fahrenheit' : 'celsius',
+    wind_speed_unit: imperial ? 'mph' : 'kmh',
+    precipitation_unit: imperial ? 'inch' : 'mm',
     current: [
       'temperature_2m',
       'apparent_temperature',
@@ -60,6 +71,7 @@ export async function fetchForecast(lat: number, lon: number): Promise<Forecast>
       'is_day',
       'wind_speed_10m',
       'wind_direction_10m',
+      'wind_gusts_10m',
       'relative_humidity_2m',
       'precipitation',
       'surface_pressure',
@@ -81,6 +93,7 @@ export async function fetchForecast(lat: number, lon: number): Promise<Forecast>
       'sunrise',
       'sunset',
       'wind_speed_10m_max',
+      'uv_index_max',
     ].join(','),
     forecast_days: '7',
     forecast_minutely_15: '8',
@@ -114,9 +127,11 @@ function mapCurrent(d: ForecastApiResponse): CurrentWeather {
     isDay: c.is_day === 1,
     windSpeed: c.wind_speed_10m,
     windDirection: c.wind_direction_10m,
+    windGust: c.wind_gusts_10m,
     humidity: c.relative_humidity_2m,
     precipitation: c.precipitation,
     pressure: c.surface_pressure,
+    uvIndex: d.daily?.uv_index_max?.[0] ?? 0,
   }
 }
 
@@ -149,6 +164,7 @@ function mapDaily(d: ForecastApiResponse): DailyPoint[] {
     sunrise: day.sunrise[i],
     sunset: day.sunset[i],
     windSpeedMax: day.wind_speed_10m_max[i],
+    uvIndexMax: day.uv_index_max?.[i] ?? 0,
   }))
 }
 
