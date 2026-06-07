@@ -125,7 +125,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
       <div className="radar-map">
         <MapContainer
           center={[lat, lon]}
-          zoom={8}
+          zoom={7}
           minZoom={3}
           maxZoom={11}
           scrollWheelZoom={false}
