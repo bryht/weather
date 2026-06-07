@@ -1096,6 +1096,9 @@ button {
   }
 
   .search {
+    /* In the column header the 280px flex-basis would apply to the vertical
+       axis and stretch the box to ~280px tall — size to content instead. */
+    flex: 0 0 auto;
     max-width: none;
   }
 
