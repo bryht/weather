@@ -692,7 +692,12 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+.radar-time.forecast {
+  color: var(--accent);
+}
+
 .radar-map {
+  position: relative;
   height: 360px;
   border-radius: 14px;
   overflow: hidden;
@@ -704,11 +709,48 @@ button {
   font-family: inherit;
 }
 
+/* Precipitation intensity legend */
+.radar-legend {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(8, 16, 30, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+}
+
+.radar-legend-label {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+.radar-legend-bar {
+  width: 84px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #8ff08f 0%,
+    #1fb31f 22%,
+    #f4e000 48%,
+    #ff8c00 68%,
+    #ff2a2a 86%,
+    #ff37c6 100%
+  );
+}
+
 .radar-controls {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .radar-btn {
@@ -721,29 +763,105 @@ button {
   cursor: pointer;
   font-size: 13px;
   flex-shrink: 0;
+  transition: background 0.2s;
 }
 
 .radar-btn:hover {
   background: rgba(255, 255, 255, 0.28);
 }
 
-.radar-slider {
+/* Buienradar-style timeline */
+.radar-timeline {
   flex: 1;
-  accent-color: var(--accent);
-  cursor: pointer;
+  min-width: 0;
 }
 
-.radar-loc {
-  font-size: 12px;
+.radar-timeline.empty {
+  height: 34px;
+}
+
+.rt-track {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 26px;
+  align-items: stretch;
+}
+
+.rt-seg {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.rt-seg.future {
+  background: rgba(79, 195, 247, 0.28);
+}
+
+.rt-seg:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.rt-seg.active {
+  background: linear-gradient(180deg, var(--accent), var(--rain));
+  transform: scaleY(1.18);
+}
+
+/* "Now" divider between observed and forecast frames */
+.rt-now {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateX(-1px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.rt-now-tag {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+}
+
+.rt-labels {
+  position: relative;
+  height: 16px;
+  margin-top: 6px;
+}
+
+.rt-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
   color: var(--muted);
-  max-width: 40%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
+.rt-label:first-child {
+  transform: none;
+  left: 0 !important;
+}
+
+.rt-label:last-child {
+  transform: translateX(-100%);
+}
+
 .radar-credit {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   font-size: 11px;
   color: var(--muted);
 }
