@@ -8,8 +8,16 @@ an **animated rain radar**, a short-term precipitation graph, and hourly /
 
 ## Features
 
-- 🌧️ **Animated rain radar** — Leaflet map with past + nowcast frames from
-  [RainViewer](https://www.rainviewer.com/), play/pause and a time scrubber.
+- 🌧️ **Animated rain radar** — a Leaflet map with two sources you can toggle:
+  - **Forecast · 6 h** — a homemade precipitation forecast built from
+    [Open-Meteo](https://open-meteo.com/): a grid of hourly precipitation
+    around you, rendered as an animated heatmap reaching hours into the future
+    (no API key).
+  - **Live** — observed + ~30 min nowcast radar tiles from
+    [RainViewer](https://www.rainviewer.com/).
+
+  Both share play/pause, a time scrubber with a "Now" divider, and a
+  precipitation intensity legend.
 - 📊 **Precipitation graph** — Buienradar's signature short-term (next ~2 h)
   rain forecast in 15-minute steps.
 - 🌡️ **Current conditions** — temperature, feels-like, wind (with a direction

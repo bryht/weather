@@ -709,6 +709,76 @@ button {
   font-family: inherit;
 }
 
+/* Live / Forecast source toggle */
+.radar-mode {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+}
+
+.radar-mode button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.radar-mode button.active {
+  background: linear-gradient(180deg, var(--accent), var(--rain));
+  color: #04233a;
+}
+
+/* Time/phase pill over the map */
+.radar-time-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: rgba(8, 16, 30, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+}
+
+.radar-time-pill.forecast {
+  color: #04233a;
+  background: linear-gradient(180deg, var(--accent), var(--rain));
+  border-color: transparent;
+}
+
+/* Centered status note (loading / error) over the map */
+.radar-note {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 500;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--text);
+  background: rgba(8, 16, 30, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+}
+
 /* Forecast badge over the map */
 .radar-forecast-badge {
   position: absolute;
