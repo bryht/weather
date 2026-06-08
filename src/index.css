@@ -709,6 +709,40 @@ button {
   font-family: inherit;
 }
 
+/* Forecast badge over the map */
+.radar-forecast-badge {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #04233a;
+  background: linear-gradient(180deg, var(--accent), var(--rain));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  animation: card-rise 0.3s ease both;
+}
+
+.rfb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #04233a;
+  animation: rfb-pulse 1s ease-in-out infinite;
+}
+
+@keyframes rfb-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
 /* Precipitation intensity legend */
 .radar-legend {
   position: absolute;
