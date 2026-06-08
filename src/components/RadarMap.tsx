@@ -24,8 +24,13 @@ interface RadarMapProps {
 // Buienradar-like ramp: light green → yellow → orange → red → magenta.
 const COLOR_SCHEME = 4
 const RADAR_OPACITY = 0.85
-const FRAME_MS = 450 // time each frame is shown while playing
-const HOLD_LAST_MS = 1400 // pause on the final (newest forecast) frame
+const FRAME_MS = 420 // observed (past) frames step quickly
+const FORECAST_MS = 750 // linger on forecast frames so the future stands out
+const HOLD_LAST_MS = 1600 // pause on the final (furthest-future) frame
+// How many recent observed frames to keep in the autoplay loop. The loop runs
+// recent-past → now → forecast so the radar always feels forward-looking; the
+// full history stays available by scrubbing the timeline.
+const PAST_LOOP_FRAMES = 6
 
 /** Re-centre the Leaflet map whenever the selected location changes. */
 function Recenter({ lat, lon }: { lat: number; lon: number }) {
@@ -119,20 +124,24 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
     }
   }, [])
 
-  // Advance one frame at a time, holding a beat on the final forecast frame
-  // before looping — mirrors Buienradar's playback rhythm.
-  useEffect(() => {
-    if (!playing || frames.length === 0) return
-    const isLast = index === frames.length - 1
-    const t = window.setTimeout(
-      () => setIndex((i) => (i + 1) % frames.length),
-      isLast ? HOLD_LAST_MS : FRAME_MS,
-    )
-    return () => window.clearTimeout(t)
-  }, [playing, index, frames.length])
+  // Start of the autoplay loop: a short slice of recent past leading into now
+  // and the forecast, so playback emphasises what's coming rather than 2h ago.
+  const loopStart = Math.max(0, nowcastStart - PAST_LOOP_FRAMES)
 
   const current = frames[index] ?? null
   const isForecast = index >= nowcastStart
+
+  // Advance one frame at a time. Forecast frames linger; we hold a beat on the
+  // final frame, then loop back to the start of the forward-looking window.
+  useEffect(() => {
+    if (!playing || frames.length === 0) return
+    const last = frames.length - 1
+    const delay = index >= last ? HOLD_LAST_MS : index >= nowcastStart ? FORECAST_MS : FRAME_MS
+    const t = window.setTimeout(() => {
+      setIndex((i) => (i >= last ? loopStart : i + 1))
+    }, delay)
+    return () => window.clearTimeout(t)
+  }, [playing, index, frames.length, nowcastStart, loopStart])
 
   const { clock, relative } = useMemo(() => {
     if (!current) return { clock: '', relative: '' }
@@ -151,7 +160,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
       <div className="card-head">
         <h2>Rain radar</h2>
         <span className={`radar-time ${isForecast ? 'forecast' : ''}`}>
-          {relative} · {clock}
+          {isForecast ? 'Forecast' : 'Observed'} · {relative} · {clock}
         </span>
       </div>
 
@@ -180,6 +189,14 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
           <Recenter lat={lat} lon={lon} />
           <FixSize />
         </MapContainer>
+
+        {/* Forecast badge — makes the future frames unmistakable */}
+        {isForecast && current && (
+          <div className="radar-forecast-badge">
+            <span className="rfb-dot" />
+            Forecast · {relative}
+          </div>
+        )}
 
         {/* Precipitation intensity legend, Buienradar-style */}
         <div className="radar-legend" aria-hidden="true">
