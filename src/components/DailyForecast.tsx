@@ -1,5 +1,5 @@
 import type { DailyPoint, Forecast } from '../api/types'
-import { formatWeekday, round } from '../utils/format'
+import { formatWeekday } from '../utils/format'
 import { weatherInfo } from '../utils/weatherCodes'
 
 interface DailyForecastProps {
@@ -33,7 +33,7 @@ export default function DailyForecast({ data, units }: DailyForecastProps) {
               </span>
               <span className="daily-pop">💧{d.precipitationProbability}%</span>
               <span className="daily-min">
-                {round(d.tempMin)}
+                {Math.round(d.tempMin)}
                 {units.temperature}
               </span>
               <div className="daily-bar-track">
@@ -43,7 +43,7 @@ export default function DailyForecast({ data, units }: DailyForecastProps) {
                 />
               </div>
               <span className="daily-max">
-                {round(d.tempMax)}
+                {Math.round(d.tempMax)}
                 {units.temperature}
               </span>
             </div>

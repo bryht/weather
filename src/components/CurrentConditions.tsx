@@ -1,5 +1,5 @@
 import type { CurrentWeather, Forecast } from '../api/types'
-import { round, uvLevel, windDirectionLabel } from '../utils/format'
+import { formatPrecip, uvLevel, windDirectionLabel } from '../utils/format'
 import { weatherInfo } from '../utils/weatherCodes'
 
 interface CurrentConditionsProps {
@@ -15,16 +15,16 @@ export default function CurrentConditions({ current, units, locationName }: Curr
   const stats = [
     {
       label: 'Wind',
-      value: `${round(current.windSpeed)} ${units.windSpeed} ${windDirectionLabel(current.windDirection)}`,
+      value: `${Math.round(current.windSpeed)} ${units.windSpeed} ${windDirectionLabel(current.windDirection)}`,
       arrow: current.windDirection,
     },
-    { label: 'Gusts', value: `${round(current.windGust)} ${units.windSpeed}` },
-    { label: 'Humidity', value: `${round(current.humidity)}%` },
-    { label: 'Precip', value: `${current.precipitation.toFixed(1)} ${units.precipitation}` },
-    { label: 'Pressure', value: `${round(current.pressure)} hPa` },
+    { label: 'Gusts', value: `${Math.round(current.windGust)} ${units.windSpeed}` },
+    { label: 'Humidity', value: `${Math.round(current.humidity)}%` },
+    { label: 'Precip', value: `${formatPrecip(current.precipitation)} ${units.precipitation}` },
+    { label: 'Pressure', value: `${Math.round(current.pressure)} hPa` },
     {
       label: 'UV index',
-      value: `${round(current.uvIndex)} · ${uv.label}`,
+      value: `${Math.round(current.uvIndex)} · ${uv.label}`,
       dot: uv.color,
     },
   ]
@@ -37,12 +37,12 @@ export default function CurrentConditions({ current, units, locationName }: Curr
         </div>
         <div className="current-temp-block">
           <span className="current-temp">
-            {round(current.temperature)}
+            {Math.round(current.temperature)}
             <span className="deg">{units.temperature}</span>
           </span>
           <span className="current-desc">{info.label}</span>
           <span className="current-feels">
-            Feels like {round(current.apparentTemperature)}
+            Feels like {Math.round(current.apparentTemperature)}
             {units.temperature}
           </span>
           <span className="current-location">📍 {locationName}</span>

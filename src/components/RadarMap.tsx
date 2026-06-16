@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { CircleMarker, MapContainer, TileLayer, useMap } from 'react-leaflet'
 import { FORECAST_FRAMES, fetchPrecipGrid, type PrecipGrid } from '../api/precipGrid'
 import ForecastLayer from './ForecastLayer'
+import { formatHour } from '../utils/format'
 
 interface RadarFrame {
   time: number
@@ -70,7 +71,7 @@ function FixSize() {
  * tiles preloaded; we animate by toggling opacity, so stepping through time is
  * smooth and never flashes blank.
  */
-function RadarLayers({ host, frames, index }: { host: string; frames: RadarFrame[]; index: number }) {
+const RadarLayers = memo(function RadarLayers({ host, frames, index }: { host: string; frames: RadarFrame[]; index: number }) {
   if (!host) return null
   return (
     <>
@@ -87,12 +88,12 @@ function RadarLayers({ host, frames, index }: { host: string; frames: RadarFrame
       ))}
     </>
   )
-}
+})
 
 /** Clock + relative-time label for a frame, at minute or hour granularity. */
 function timeInfo(unixSec: number, granularity: 'min' | 'hour') {
   const d = new Date(unixSec * 1000)
-  const clock = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const clock = formatHour(d.toISOString())
   const mins = Math.round((unixSec - Date.now() / 1000) / 60)
   let relative: string
   if (granularity === 'hour') {
@@ -212,6 +213,12 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
     return timeInfo(f.time, 'min')
   }, [isForecastMode, fcTimeline, fcIndex, frames, liveIndex])
 
+  const handleScrub = useCallback((i: number) => {
+    setPlaying(false)
+    if (mode === 'forecast') setFcIndex(i)
+    else setLiveIndex(i)
+  }, [mode])
+
   return (
     <section className="card radar-card">
       <div className="card-head">
@@ -302,11 +309,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
           frames={tlFrames}
           nowcastStart={tlNowcastStart}
           index={tlIndex}
-          onScrub={(i) => {
-            setPlaying(false)
-            if (isForecastMode) setFcIndex(i)
-            else setLiveIndex(i)
-          }}
+          onScrub={handleScrub}
         />
       </div>
 
@@ -336,7 +339,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
  * Shared timeline: observed frames on the left, forecast on the right, a "Now"
  * divider between them, clickable ticks for scrubbing, and time labels.
  */
-function RadarTimeline({
+const RadarTimeline = memo(function RadarTimeline({
   frames,
   nowcastStart,
   index,
@@ -371,10 +374,7 @@ function RadarTimeline({
               type="button"
               className={`rt-seg ${future ? 'future' : 'past'} ${active ? 'active' : ''}`}
               onClick={() => onScrub(i)}
-              aria-label={new Date(frame.time * 1000).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              aria-label={formatHour(new Date(frame.time * 1000).toISOString())}
               aria-pressed={active}
             />
           )
@@ -388,10 +388,10 @@ function RadarTimeline({
             className="rt-label"
             style={{ left: `${(i / (frames.length - 1)) * 100}%` }}
           >
-            {new Date(f.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {formatHour(new Date(f.time * 1000).toISOString())}
           </span>
         ))}
       </div>
     </div>
   )
-}
+})

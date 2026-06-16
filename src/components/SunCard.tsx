@@ -1,5 +1,5 @@
 import type { DailyPoint } from '../api/types'
-import { dayProgress, formatTime, uvLevel } from '../utils/format'
+import { dayProgress, formatHour, uvLevel } from '../utils/format'
 
 interface SunCardProps {
   today: DailyPoint
@@ -53,7 +53,7 @@ export default function SunCard({ today, uvIndex }: SunCardProps) {
       <div className="sun-times">
         <div className="sun-time">
           <span className="sun-time-label">Sunrise</span>
-          <span className="sun-time-value">🌅 {formatTime(today.sunrise)}</span>
+          <span className="sun-time-value">🌅 {formatHour(today.sunrise)}</span>
         </div>
         <div className="sun-uv">
           <span className="sun-time-label">UV index</span>
@@ -64,7 +64,7 @@ export default function SunCard({ today, uvIndex }: SunCardProps) {
         </div>
         <div className="sun-time end">
           <span className="sun-time-label">Sunset</span>
-          <span className="sun-time-value">🌇 {formatTime(today.sunset)}</span>
+          <span className="sun-time-value">🌇 {formatHour(today.sunset)}</span>
         </div>
       </div>
     </section>

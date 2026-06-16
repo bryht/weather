@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { ImageOverlay } from 'react-leaflet'
 import type { PrecipGrid } from '../api/precipGrid'
 import { precipColor } from '../utils/precipColor'
@@ -15,17 +15,16 @@ interface ForecastLayerProps {
  * Leaflet then scales it across the bounds, and the browser's bilinear
  * smoothing turns the coarse grid into soft, radar-like precipitation blobs.
  */
-export default function ForecastLayer({ grid, frame, opacity }: ForecastLayerProps) {
+export default memo(function ForecastLayer({ grid, frame, opacity }: ForecastLayerProps) {
   const url = useMemo(() => buildFrameDataUrl(grid, frame), [grid, frame])
+  const bounds = useMemo(
+    () => [[grid.south, grid.west], [grid.north, grid.east]] as [[number, number], [number, number]],
+    [grid.south, grid.west, grid.north, grid.east],
+  )
   if (!url) return null
 
-  const bounds: [[number, number], [number, number]] = [
-    [grid.south, grid.west],
-    [grid.north, grid.east],
-  ]
-
   return <ImageOverlay url={url} bounds={bounds} opacity={opacity} zIndex={350} />
-}
+})
 
 function buildFrameDataUrl(grid: PrecipGrid, frame: number): string {
   const values = grid.frames[frame]

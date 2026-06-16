@@ -9,22 +9,20 @@ export function formatWeekday(iso: string, index: number): string {
   return new Date(iso).toLocaleDateString([], { weekday: 'short' })
 }
 
-export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
 const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
 
 export function windDirectionLabel(deg: number): string {
   return COMPASS[Math.round(deg / 45) % 8]
 }
 
-export function round(n: number): number {
-  return Math.round(n)
+
+export function formatPrecip(mm: number): string {
+  return mm < 1 ? mm.toFixed(2) : mm.toFixed(1)
 }
 
-export function locationLabel(name: string, admin1?: string, country?: string): string {
-  const parts = [name]
+export function locationLabel(name?: string, admin1?: string, country?: string): string {
+  const parts: string[] = []
+  if (name) parts.push(name)
   if (admin1 && admin1 !== name) parts.push(admin1)
   if (country) parts.push(country)
   return parts.join(', ')

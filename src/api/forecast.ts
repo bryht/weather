@@ -7,7 +7,7 @@ import type {
   UnitSystem,
 } from './types'
 
-const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast'
+import { FORECAST_BASE } from './constants'
 
 interface ForecastApiResponse {
   timezone: string
@@ -55,6 +55,7 @@ export async function fetchForecast(
   lat: number,
   lon: number,
   unitSystem: UnitSystem = 'metric',
+  signal?: AbortSignal,
 ): Promise<Forecast> {
   const imperial = unitSystem === 'imperial'
   const params = new URLSearchParams({
@@ -99,7 +100,7 @@ export async function fetchForecast(
     forecast_minutely_15: '8',
   })
 
-  const res = await fetch(`${FORECAST_BASE}?${params.toString()}`)
+  const res = await fetch(`${FORECAST_BASE}?${params.toString()}`, { signal })
   if (!res.ok) throw new Error(`Forecast request failed (${res.status})`)
   const data: ForecastApiResponse = await res.json()
 

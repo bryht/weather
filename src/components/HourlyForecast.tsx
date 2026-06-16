@@ -1,5 +1,5 @@
 import type { Forecast, HourlyPoint } from '../api/types'
-import { formatHour, round } from '../utils/format'
+import { formatHour } from '../utils/format'
 import { weatherInfo } from '../utils/weatherCodes'
 
 interface HourlyForecastProps {
@@ -69,7 +69,7 @@ export default function HourlyForecast({ data, units }: HourlyForecastProps) {
               return (
                 <div className="hourly-item" key={h.time}>
                   <span className="hourly-temp">
-                    {round(h.temperature)}
+                    {Math.round(h.temperature)}
                     {units.temperature}
                   </span>
                   <span className="hourly-icon" aria-label={info.label} title={info.label}>

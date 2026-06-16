@@ -55,29 +55,33 @@ export default function App() {
   const [locating, setLocating] = useState(false)
 
   const loadForecast = useCallback(
-    async (loc: GeoLocation, unitSystem: UnitSystem) => {
+    async (loc: GeoLocation, unitSystem: UnitSystem, signal?: AbortSignal) => {
       setLoading(true)
       setError(null)
       try {
-        const data = await fetchForecast(loc.latitude, loc.longitude, unitSystem)
-        setForecast(data)
+        const data = await fetchForecast(loc.latitude, loc.longitude, unitSystem, signal)
+        if (!signal?.aborted) setForecast(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load the forecast.')
+        if (!signal?.aborted) {
+          setError(err instanceof Error ? err.message : 'Could not load the forecast.')
+        }
       } finally {
-        setLoading(false)
+        if (!signal?.aborted) setLoading(false)
       }
     },
     [],
   )
 
   useEffect(() => {
-    loadForecast(location, units)
+    const controller = new AbortController()
+    loadForecast(location, units, controller.signal)
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(location))
       localStorage.setItem(UNITS_KEY, units)
     } catch {
       /* ignore */
     }
+    return () => controller.abort()
   }, [location, units, loadForecast])
 
   const handleUseMyLocation = useCallback(() => {
@@ -104,10 +108,7 @@ export default function App() {
     ? themeFor(forecast.current.weatherCode, forecast.current.isDay)
     : 'night'
 
-  const fullLabel =
-    location.name === 'My location'
-      ? 'My location'
-      : locationLabel(location.name, location.admin1, location.country)
+  const fullLabel = locationLabel(location.name, location.admin1, location.country)
 
   return (
     <div className={`app theme-${theme}`}>

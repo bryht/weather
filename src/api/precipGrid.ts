@@ -8,7 +8,7 @@
  * already use elsewhere.
  */
 
-const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast'
+import { FORECAST_BASE } from './constants'
 
 const COLS = 13
 const ROWS = 9

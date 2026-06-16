@@ -23,18 +23,24 @@ export default function SearchBar({ onSelect, onUseMyLocation, locating }: Searc
       return
     }
     setLoading(true)
+    const controller = new AbortController()
     const handle = window.setTimeout(async () => {
       try {
-        const found = await searchLocations(q)
-        setResults(found)
-        setOpen(true)
+        const found = await searchLocations(q, 6, controller.signal)
+        if (!controller.signal.aborted) {
+          setResults(found)
+          setOpen(true)
+        }
       } catch {
-        setResults([])
+        if (!controller.signal.aborted) setResults([])
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }, 300)
-    return () => window.clearTimeout(handle)
+    return () => {
+      window.clearTimeout(handle)
+      controller.abort()
+    }
   }, [query])
 
   useEffect(() => {

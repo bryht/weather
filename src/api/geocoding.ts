@@ -14,12 +14,12 @@ interface GeoApiResult {
 }
 
 /** Search for matching places by name using the Open-Meteo geocoding API. */
-export async function searchLocations(query: string, count = 6): Promise<GeoLocation[]> {
+export async function searchLocations(query: string, count = 6, signal?: AbortSignal): Promise<GeoLocation[]> {
   const q = query.trim()
   if (q.length < 2) return []
 
   const url = `${GEO_BASE}/search?name=${encodeURIComponent(q)}&count=${count}&language=en&format=json`
-  const res = await fetch(url)
+  const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`Geocoding failed (${res.status})`)
 
   const data: { results?: GeoApiResult[] } = await res.json()
