@@ -1,3 +1,4 @@
+import { apiGet } from './client'
 import type { GeoLocation } from './types'
 
 const GEO_BASE = 'https://geocoding-api.open-meteo.com/v1'
@@ -19,10 +20,7 @@ export async function searchLocations(query: string, count = 6, signal?: AbortSi
   if (q.length < 2) return []
 
   const url = `${GEO_BASE}/search?name=${encodeURIComponent(q)}&count=${count}&language=en&format=json`
-  const res = await fetch(url, { signal })
-  if (!res.ok) throw new Error(`Geocoding failed (${res.status})`)
-
-  const data: { results?: GeoApiResult[] } = await res.json()
+  const data = await apiGet<{ results?: GeoApiResult[] }>(url, signal)
   return (data.results ?? []).map(mapResult)
 }
 

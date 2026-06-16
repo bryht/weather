@@ -7,6 +7,7 @@ import type {
   UnitSystem,
 } from './types'
 
+import { apiGet } from './client'
 import { FORECAST_BASE } from './constants'
 
 interface ForecastApiResponse {
@@ -100,9 +101,7 @@ export async function fetchForecast(
     forecast_minutely_15: '8',
   })
 
-  const res = await fetch(`${FORECAST_BASE}?${params.toString()}`, { signal })
-  if (!res.ok) throw new Error(`Forecast request failed (${res.status})`)
-  const data: ForecastApiResponse = await res.json()
+  const data = await apiGet<ForecastApiResponse>(`${FORECAST_BASE}?${params.toString()}`, signal)
 
   return {
     timezone: data.timezone,
@@ -132,7 +131,6 @@ function mapCurrent(d: ForecastApiResponse): CurrentWeather {
     humidity: c.relative_humidity_2m,
     precipitation: c.precipitation,
     pressure: c.surface_pressure,
-    uvIndex: d.daily?.uv_index_max?.[0] ?? 0,
   }
 }
 

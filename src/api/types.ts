@@ -21,7 +21,6 @@ export interface CurrentWeather {
   humidity: number
   precipitation: number
   pressure: number
-  uvIndex: number
 }
 
 export interface HourlyPoint {

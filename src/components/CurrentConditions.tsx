@@ -6,11 +6,12 @@ interface CurrentConditionsProps {
   current: CurrentWeather
   units: Forecast['units']
   locationName: string
+  uvIndex: number
 }
 
-export default function CurrentConditions({ current, units, locationName }: CurrentConditionsProps) {
+export default function CurrentConditions({ current, units, locationName, uvIndex }: CurrentConditionsProps) {
   const info = weatherInfo(current.weatherCode, current.isDay)
-  const uv = uvLevel(current.uvIndex)
+  const uv = uvLevel(uvIndex)
 
   const stats = [
     {
@@ -24,7 +25,7 @@ export default function CurrentConditions({ current, units, locationName }: Curr
     { label: 'Pressure', value: `${Math.round(current.pressure)} hPa` },
     {
       label: 'UV index',
-      value: `${Math.round(current.uvIndex)} · ${uv.label}`,
+      value: `${Math.round(uvIndex)} · ${uv.label}`,
       dot: uv.color,
     },
   ]

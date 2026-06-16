@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { Forecast, HourlyPoint } from '../api/types'
 import { formatHour } from '../utils/format'
 import { weatherInfo } from '../utils/weatherCodes'
@@ -7,10 +8,20 @@ interface HourlyForecastProps {
   units: Forecast['units']
 }
 
-const ITEM_W = 60 // px — must match .hourly-item width in CSS
 const CURVE_H = 40 // px — height of the SVG temperature curve band
+const DEFAULT_ITEM_W = 60 // px — fallback before DOM measurement
 
 export default function HourlyForecast({ data, units }: HourlyForecastProps) {
+  const innerRef = useRef<HTMLDivElement>(null)
+  const [itemW, setItemW] = useState(DEFAULT_ITEM_W)
+
+  // Measure the actual item width from the DOM so the SVG curve stays aligned
+  // even if CSS changes (e.g. responsive breakpoints).
+  useLayoutEffect(() => {
+    const el = innerRef.current?.querySelector('.hourly-item')
+    if (el) setItemW(el.getBoundingClientRect().width)
+  }, [data])
+
   if (data.length === 0) return null
 
   // Build a smooth temperature curve across the strip. Each point sits at the
@@ -19,10 +30,10 @@ export default function HourlyForecast({ data, units }: HourlyForecastProps) {
   const min = Math.min(...temps)
   const max = Math.max(...temps)
   const span = Math.max(1, max - min)
-  const width = data.length * ITEM_W
+  const width = data.length * itemW
 
   const points = temps.map((t, i) => {
-    const x = i * ITEM_W + ITEM_W / 2
+    const x = i * itemW + itemW / 2
     const y = CURVE_H - 6 - ((t - min) / span) * (CURVE_H - 12)
     return { x, y }
   })
@@ -35,7 +46,7 @@ export default function HourlyForecast({ data, units }: HourlyForecastProps) {
         <h2>Next 24 hours</h2>
       </div>
       <div className="hourly-scroll">
-        <div className="hourly-inner" style={{ width }}>
+        <div className="hourly-inner" ref={innerRef} style={{ width }}>
           <svg
             className="hourly-curve"
             width={width}

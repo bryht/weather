@@ -8,6 +8,7 @@
  * already use elsewhere.
  */
 
+import { apiGet } from './client'
 import { FORECAST_BASE } from './constants'
 
 const COLS = 13
@@ -54,10 +55,7 @@ export async function fetchPrecipGrid(lat: number, lon: number): Promise<PrecipG
     forecast_days: '2',
   })
 
-  const res = await fetch(`${FORECAST_BASE}?${params.toString()}`)
-  if (!res.ok) throw new Error(`Precipitation grid request failed (${res.status})`)
-
-  const data = await res.json()
+  const data = await apiGet<unknown>(`${FORECAST_BASE}?${params.toString()}`)
   // Open-Meteo returns an array when several coordinates are requested.
   const locs: Array<{ hourly?: { time: string[]; precipitation: number[] } }> = Array.isArray(data)
     ? data

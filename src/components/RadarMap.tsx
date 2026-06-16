@@ -1,40 +1,17 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect } from 'react'
 import { CircleMarker, MapContainer, TileLayer, useMap } from 'react-leaflet'
-import { FORECAST_FRAMES, fetchPrecipGrid, type PrecipGrid } from '../api/precipGrid'
 import ForecastLayer from './ForecastLayer'
 import { formatHour } from '../utils/format'
+import { useRadarData, type RadarFrame } from '../hooks/useRadarData'
+import { useRadarPlayback, RADAR_CONFIG } from '../hooks/useRadarPlayback'
 
-interface RadarFrame {
-  time: number
-  path: string
-}
-
-interface RainViewerResponse {
-  host: string
-  radar: {
-    past: RadarFrame[]
-    nowcast: RadarFrame[]
-  }
-}
+const { colorScheme, radarOpacity, forecastOpacity } = RADAR_CONFIG
 
 interface RadarMapProps {
   lat: number
   lon: number
   label: string
 }
-
-type Mode = 'forecast' | 'live'
-
-// RainViewer colour scheme 4 ("The Weather Channel") gives the familiar
-// Buienradar-like ramp: light green → yellow → orange → red → magenta.
-const COLOR_SCHEME = 4
-const RADAR_OPACITY = 0.85
-const FORECAST_OPACITY = 0.6
-const FRAME_MS = 420 // observed (past) frames step quickly
-const FORECAST_MS = 750 // linger on RainViewer nowcast frames
-const HOLD_LAST_MS = 1600 // pause on the final frame before looping
-const FC_FRAME_MS = 850 // our hourly forecast frames step more slowly
-const PAST_LOOP_FRAMES = 6
 
 /** Re-centre the Leaflet map whenever the selected location changes. */
 function Recenter({ lat, lon }: { lat: number; lon: number }) {
@@ -78,8 +55,8 @@ const RadarLayers = memo(function RadarLayers({ host, frames, index }: { host: s
       {frames.map((frame, i) => (
         <TileLayer
           key={frame.path}
-          url={`${host}${frame.path}/256/{z}/{x}/{y}/${COLOR_SCHEME}/1_1.png`}
-          opacity={i === index ? RADAR_OPACITY : 0}
+          url={`${host}${frame.path}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`}
+          opacity={i === index ? radarOpacity : 0}
           maxNativeZoom={10}
           minNativeZoom={1}
           tileSize={256}
@@ -90,134 +67,24 @@ const RadarLayers = memo(function RadarLayers({ host, frames, index }: { host: s
   )
 })
 
-/** Clock + relative-time label for a frame, at minute or hour granularity. */
-function timeInfo(unixSec: number, granularity: 'min' | 'hour') {
-  const d = new Date(unixSec * 1000)
-  const clock = formatHour(d.toISOString())
-  const mins = Math.round((unixSec - Date.now() / 1000) / 60)
-  let relative: string
-  if (granularity === 'hour') {
-    const hrs = Math.round(mins / 60)
-    relative = hrs <= 0 ? 'Now' : `+${hrs}h`
-  } else if (Math.abs(mins) <= 4) {
-    relative = 'Now'
-  } else {
-    relative = mins > 0 ? `+${mins} min` : `${mins} min`
-  }
-  return { clock, relative, future: mins > 5 }
-}
-
 export default function RadarMap({ lat, lon, label }: RadarMapProps) {
-  const [mode, setMode] = useState<Mode>('forecast')
-  const [playing, setPlaying] = useState(true)
+  const data = useRadarData(lat, lon)
+  const playback = useRadarPlayback({
+    mode: data.mode,
+    frames: data.frames,
+    nowcastStart: data.nowcastStart,
+    grid: data.grid,
+    fcTimeline: data.fcTimeline,
+    forecastFrames: data.FORECAST_FRAMES,
+  })
 
-  // --- Live radar (RainViewer) state ---
-  const [host, setHost] = useState('')
-  const [frames, setFrames] = useState<RadarFrame[]>([])
-  const [nowcastStart, setNowcastStart] = useState(0)
-  const [liveIndex, setLiveIndex] = useState(0)
+  const { isForecastMode, playing, setPlaying, liveIndex, fcIndex, info, handleScrub } = playback
+  const { setMode, host, frames, grid, fcError } = data
 
-  // --- Homemade forecast (Open-Meteo grid) state ---
-  const [grid, setGrid] = useState<PrecipGrid | null>(null)
-  const [fcIndex, setFcIndex] = useState(0)
-  const [fcError, setFcError] = useState(false)
-
-  // Fetch RainViewer frames lazily, the first time Live mode is opened.
-  useEffect(() => {
-    if (mode !== 'live' || host) return
-    let cancelled = false
-    fetch('https://api.rainviewer.com/public/weather-maps.json')
-      .then((r) => r.json())
-      .then((data: RainViewerResponse) => {
-        if (cancelled) return
-        const past = data.radar?.past ?? []
-        const nowcast = data.radar?.nowcast ?? []
-        setHost(data.host)
-        setFrames([...past, ...nowcast])
-        setNowcastStart(past.length)
-        setLiveIndex(Math.max(0, past.length - 1))
-      })
-      .catch(() => {
-        /* radar overlay is optional; the base map still renders */
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [mode, host])
-
-  // (Re)build the forecast grid for the current location whenever Forecast mode
-  // is active and the location changes.
-  useEffect(() => {
-    if (mode !== 'forecast') return
-    let cancelled = false
-    setFcError(false)
-    fetchPrecipGrid(lat, lon)
-      .then((g) => {
-        if (cancelled) return
-        setGrid(g)
-        setFcIndex(0)
-      })
-      .catch(() => {
-        if (!cancelled) setFcError(true)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [mode, lat, lon])
-
-  const loopStart = Math.max(0, nowcastStart - PAST_LOOP_FRAMES)
-
-  // Live playback: forward-looking loop with lingering forecast frames.
-  useEffect(() => {
-    if (mode !== 'live' || !playing || frames.length === 0) return
-    const last = frames.length - 1
-    const delay = liveIndex >= last ? HOLD_LAST_MS : liveIndex >= nowcastStart ? FORECAST_MS : FRAME_MS
-    const t = window.setTimeout(() => {
-      setLiveIndex((i) => (i >= last ? loopStart : i + 1))
-    }, delay)
-    return () => window.clearTimeout(t)
-  }, [mode, playing, liveIndex, frames.length, nowcastStart, loopStart])
-
-  // Forecast playback: loop the hourly frames, holding a beat on the last one.
-  useEffect(() => {
-    if (mode !== 'forecast' || !playing || !grid) return
-    const last = FORECAST_FRAMES - 1
-    const t = window.setTimeout(
-      () => setFcIndex((i) => (i >= last ? 0 : i + 1)),
-      fcIndex >= last ? HOLD_LAST_MS : FC_FRAME_MS,
-    )
-    return () => window.clearTimeout(t)
-  }, [mode, playing, grid, fcIndex])
-
-  const isForecastMode = mode === 'forecast'
-
-  // Pseudo-frames so the shared timeline can render the forecast hours too.
-  const fcTimeline = useMemo<RadarFrame[]>(
-    () => (grid ? grid.times.map((t, i) => ({ time: Date.parse(`${t}Z`) / 1000, path: `fc-${i}` })) : []),
-    [grid],
-  )
-
-  const tlFrames = isForecastMode ? fcTimeline : frames
-  const tlIndex = isForecastMode ? fcIndex : liveIndex
-  const tlNowcastStart = isForecastMode ? 1 : nowcastStart
-
-  // Header label + forecast badge.
-  const info = useMemo(() => {
-    if (isForecastMode) {
-      const t = fcTimeline[fcIndex]
-      if (!t) return null
-      return timeInfo(t.time, 'hour')
-    }
-    const f = frames[liveIndex]
-    if (!f) return null
-    return timeInfo(f.time, 'min')
-  }, [isForecastMode, fcTimeline, fcIndex, frames, liveIndex])
-
-  const handleScrub = useCallback((i: number) => {
-    setPlaying(false)
-    if (mode === 'forecast') setFcIndex(i)
-    else setLiveIndex(i)
-  }, [mode])
+  const switchMode = useCallback((m: 'forecast' | 'live') => {
+    setMode(m)
+    setPlaying(true)
+  }, [setMode, setPlaying])
 
   return (
     <section className="card radar-card">
@@ -228,10 +95,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
             type="button"
             className={isForecastMode ? 'active' : ''}
             aria-pressed={isForecastMode}
-            onClick={() => {
-              setMode('forecast')
-              setPlaying(true)
-            }}
+            onClick={() => switchMode('forecast')}
           >
             Forecast · 6h
           </button>
@@ -239,10 +103,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
             type="button"
             className={!isForecastMode ? 'active' : ''}
             aria-pressed={!isForecastMode}
-            onClick={() => {
-              setMode('live')
-              setPlaying(true)
-            }}
+            onClick={() => switchMode('live')}
           >
             Live
           </button>
@@ -266,7 +127,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
             minNativeZoom={0}
           />
           {isForecastMode
-            ? grid && <ForecastLayer grid={grid} frame={fcIndex} opacity={FORECAST_OPACITY} />
+            ? grid && <ForecastLayer grid={grid} frame={fcIndex} opacity={forecastOpacity} />
             : <RadarLayers host={host} frames={frames} index={liveIndex} />}
           <CircleMarker
             center={[lat, lon]}
@@ -306,9 +167,9 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
         </button>
 
         <RadarTimeline
-          frames={tlFrames}
-          nowcastStart={tlNowcastStart}
-          index={tlIndex}
+          frames={playback.tlFrames}
+          nowcastStart={playback.tlNowcastStart}
+          index={playback.tlIndex}
           onScrub={handleScrub}
         />
       </div>

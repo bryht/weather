@@ -147,11 +147,12 @@ export default function App() {
               current={forecast.current}
               units={forecast.units}
               locationName={fullLabel}
+              uvIndex={forecast.daily[0]?.uvIndexMax ?? 0}
             />
             <PrecipChart data={forecast.precip} unit={forecast.units.precipitation} />
             <RadarMap lat={location.latitude} lon={location.longitude} label={fullLabel} />
             {forecast.daily[0] && (
-              <SunCard today={forecast.daily[0]} uvIndex={forecast.current.uvIndex} />
+              <SunCard today={forecast.daily[0]} uvIndex={forecast.daily[0].uvIndexMax} />
             )}
             <HourlyForecast data={forecast.hourly} units={forecast.units} />
             <DailyForecast data={forecast.daily} units={forecast.units} />
