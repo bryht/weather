@@ -39,6 +39,17 @@ export function useRadarData(lat: number, lon: number) {
     [grid],
   )
 
+  // Normalised precipitation intensity (0–1) per forecast frame, for the timeline bars.
+  const frameIntensities = useMemo<number[]>(() => {
+    if (!grid || grid.max === 0) return []
+    return grid.frames.map((frame) => {
+      const sum = frame.reduce((s, v) => s + v, 0)
+      // Normalise against a moderate-rain baseline so typical rain fills the bar.
+      const baseline = frame.length * 1.5 // ~1.5 mm/h across the grid = full bar
+      return Math.min(1, sum / baseline)
+    })
+  }, [grid])
+
   // Fetch RainViewer frames lazily, the first time Live mode is opened.
   useEffect(() => {
     if (mode !== 'live' || host) return
@@ -91,6 +102,7 @@ export function useRadarData(lat: number, lon: number) {
     grid,
     fcError,
     fcTimeline,
+    frameIntensities,
     FORECAST_FRAMES,
   }
 }

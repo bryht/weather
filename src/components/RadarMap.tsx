@@ -79,7 +79,7 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
   })
 
   const { isForecastMode, playing, setPlaying, liveIndex, fcIndex, info, handleScrub } = playback
-  const { setMode, host, frames, grid, fcError } = data
+  const { setMode, host, frames, grid, fcError, frameIntensities } = data
 
   const switchMode = useCallback((m: 'forecast' | 'live') => {
     setMode(m)
@@ -129,9 +129,16 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
           {isForecastMode
             ? grid && <ForecastLayer grid={grid} frame={fcIndex} opacity={forecastOpacity} />
             : <RadarLayers host={host} frames={frames} index={liveIndex} />}
+          {/* Pulsing ring behind the location marker */}
           <CircleMarker
             center={[lat, lon]}
-            radius={6}
+            radius={14}
+            pathOptions={{ color: '#fff', weight: 0, fillColor: '#fff', fillOpacity: 0.12 }}
+            className="radar-pulse"
+          />
+          <CircleMarker
+            center={[lat, lon]}
+            radius={5}
             pathOptions={{ color: '#fff', weight: 2, fillColor: '#ff5252', fillOpacity: 1 }}
           />
           <Recenter lat={lat} lon={lon} />
@@ -140,8 +147,13 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
 
         {info && (
           <div className={`radar-time-pill ${info.future ? 'forecast' : ''}`}>
-            {info.future && <span className="rfb-dot" />}
-            {isForecastMode || info.future ? 'Forecast' : 'Observed'} · {info.relative} · {info.clock}
+            <span className="rtp-type">
+              {isForecastMode || info.future ? 'Forecast' : 'Observed'}
+            </span>
+            <span className="rtp-time">
+              {info.relative === 'Now' ? 'Now' : info.relative}
+              <span className="rtp-clock">{info.clock}</span>
+            </span>
           </div>
         )}
 
@@ -159,17 +171,27 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
 
       <div className="radar-controls">
         <button
-          className="radar-btn"
+          className={`radar-btn ${playing ? 'is-playing' : ''}`}
           onClick={() => setPlaying((p) => !p)}
           aria-label={playing ? 'Pause animation' : 'Play animation'}
         >
-          {playing ? '❚❚' : '▶'}
+          {playing ? (
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <rect x="6" y="5" width="4" height="14" rx="1" />
+              <rect x="14" y="5" width="4" height="14" rx="1" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
+            </svg>
+          )}
         </button>
 
         <RadarTimeline
           frames={playback.tlFrames}
           nowcastStart={playback.tlNowcastStart}
           index={playback.tlIndex}
+          intensities={isForecastMode ? frameIntensities : []}
           onScrub={handleScrub}
         />
       </div>
@@ -198,22 +220,25 @@ export default function RadarMap({ lat, lon, label }: RadarMapProps) {
 
 /**
  * Shared timeline: observed frames on the left, forecast on the right, a "Now"
- * divider between them, clickable ticks for scrubbing, and time labels.
+ * divider between them, intensity bars, a playhead, clickable scrubbing, and time labels.
  */
 const RadarTimeline = memo(function RadarTimeline({
   frames,
   nowcastStart,
   index,
+  intensities,
   onScrub,
 }: {
   frames: RadarFrame[]
   nowcastStart: number
   index: number
+  intensities: number[]
   onScrub: (i: number) => void
 }) {
   if (frames.length === 0) return <div className="radar-timeline empty" />
 
   const nowPct = (nowcastStart / frames.length) * 100
+  const playheadPct = frames.length > 1 ? (index / (frames.length - 1)) * 100 : 0
   const labelEvery = Math.max(1, Math.round(frames.length / 4))
   const labels = frames
     .map((f, i) => ({ i, f }))
@@ -222,6 +247,10 @@ const RadarTimeline = memo(function RadarTimeline({
   return (
     <div className="radar-timeline">
       <div className="rt-track" role="group" aria-label="Radar time">
+        {/* Playhead triangle */}
+        <span className="rt-playhead" style={{ left: `${playheadPct}%` }} aria-hidden="true" />
+
+        {/* "Now" divider */}
         <span className="rt-now" style={{ left: `${nowPct}%` }} aria-hidden="true">
           <span className="rt-now-tag">Now</span>
         </span>
@@ -229,6 +258,11 @@ const RadarTimeline = memo(function RadarTimeline({
         {frames.map((frame, i) => {
           const future = i >= nowcastStart
           const active = i === index
+          const intensity = intensities[i]
+          // Forecast bars use intensity data; live bars use a uniform height.
+          const barHeight = intensity !== undefined
+            ? `${Math.max(12, intensity * 100)}%`
+            : '40%'
           return (
             <button
               key={frame.path}
@@ -237,7 +271,9 @@ const RadarTimeline = memo(function RadarTimeline({
               onClick={() => onScrub(i)}
               aria-label={formatHour(new Date(frame.time * 1000).toISOString())}
               aria-pressed={active}
-            />
+            >
+              <span className="rt-bar" style={{ height: barHeight }} />
+            </button>
           )
         })}
       </div>

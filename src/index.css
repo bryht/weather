@@ -696,11 +696,11 @@ button {
 /* Live / Forecast source toggle */
 .radar-mode {
   display: inline-flex;
-  padding: 3px;
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 999px;
-  backdrop-filter: blur(8px);
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  gap: 2px;
 }
 
 .radar-mode button {
@@ -708,43 +708,68 @@ button {
   background: transparent;
   color: var(--muted);
   font-size: 12px;
-  font-weight: 700;
-  padding: 4px 11px;
-  border-radius: 999px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.25s, color 0.25s;
 }
 
 .radar-mode button.active {
-  background: linear-gradient(180deg, var(--accent), var(--rain));
-  color: #04233a;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
 }
 
-/* Time/phase pill over the map */
+/* Time indicator over the map */
 .radar-time-pill {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 12px;
+  left: 12px;
   z-index: 500;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+  border-radius: 14px;
   color: var(--text);
-  background: rgba(8, 16, 30, 0.66);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(6px);
+  background: rgba(8, 16, 30, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .radar-time-pill.forecast {
-  color: #04233a;
-  background: linear-gradient(180deg, var(--accent), var(--rain));
-  border-color: transparent;
+  background: rgba(79, 195, 247, 0.12);
+  border-color: rgba(79, 195, 247, 0.25);
+}
+
+.rtp-type {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+.radar-time-pill.forecast .rtp-type {
+  color: var(--accent);
+}
+
+.rtp-time {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.rtp-clock {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
 }
 
 /* Centered status note (loading / error) over the map */
@@ -763,52 +788,54 @@ button {
   backdrop-filter: blur(6px);
 }
 
-.rfb-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #04233a;
-  animation: rfb-pulse 1s ease-in-out infinite;
+/* Pulsing ring on the location marker */
+.radar-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: radar-pulse 2.5s ease-out infinite;
 }
 
-@keyframes rfb-pulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.1); }
+@keyframes radar-pulse {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0; transform: scale(2.2); }
 }
 
 /* Precipitation intensity legend */
 .radar-legend {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
+  left: 12px;
+  bottom: 12px;
   z-index: 500;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: rgba(8, 16, 30, 0.66);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(6px);
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(8, 16, 30, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .radar-legend-label {
   font-size: 10px;
   color: var(--muted);
   letter-spacing: 0.3px;
+  font-weight: 600;
 }
 
 .radar-legend-bar {
-  width: 84px;
-  height: 7px;
-  border-radius: 999px;
+  width: 100px;
+  height: 6px;
+  border-radius: 3px;
   background: linear-gradient(
     90deg,
-    #8ff08f 0%,
-    #1fb31f 22%,
-    #f4e000 48%,
+    rgba(143, 240, 143, 0.4) 0%,
+    #8ff08f 15%,
+    #1fb31f 30%,
+    #f4e000 50%,
     #ff8c00 68%,
-    #ff2a2a 86%,
+    #ff2a2a 84%,
     #ff37c6 100%
   );
 }
@@ -816,43 +843,56 @@ button {
 .radar-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 14px;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 0 2px;
 }
 
 .radar-btn {
   border: none;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--text);
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 13px;
   flex-shrink: 0;
-  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.15s;
 }
 
 .radar-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.06);
 }
 
-/* Buienradar-style timeline */
+.radar-btn:active {
+  transform: scale(0.95);
+}
+
+.radar-btn.is-playing {
+  background: rgba(79, 195, 247, 0.12);
+}
+
+/* Radar timeline with intensity bars */
 .radar-timeline {
   flex: 1;
   min-width: 0;
 }
 
 .radar-timeline.empty {
-  height: 34px;
+  height: 56px;
 }
 
 .rt-track {
   position: relative;
   display: flex;
-  gap: 2px;
-  height: 26px;
-  align-items: stretch;
+  gap: 3px;
+  height: 44px;
+  align-items: flex-end;
+  padding: 0 2px;
 }
 
 .rt-seg {
@@ -860,53 +900,83 @@ button {
   min-width: 0;
   padding: 0;
   border: none;
-  border-radius: 3px;
+  background: none;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.12);
-  transition: background 0.15s, transform 0.15s;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
 }
 
-.rt-seg.future {
-  background: rgba(79, 195, 247, 0.28);
+.rt-bar {
+  width: 100%;
+  border-radius: 3px 3px 1px 1px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: height 0.25s ease, background 0.2s, filter 0.15s;
+  min-height: 4px;
 }
 
-.rt-seg:hover {
-  background: rgba(255, 255, 255, 0.32);
+.rt-seg.future .rt-bar {
+  background: rgba(79, 195, 247, 0.3);
 }
 
-.rt-seg.active {
+.rt-seg:hover .rt-bar {
+  filter: brightness(1.5);
+}
+
+.rt-seg.active .rt-bar {
   background: linear-gradient(180deg, var(--accent), var(--rain));
-  transform: scaleY(1.18);
+  filter: brightness(1.15);
+  box-shadow: 0 0 8px rgba(79, 195, 247, 0.3);
 }
 
-/* "Now" divider between observed and forecast frames */
+/* Playhead triangle */
+.rt-playhead {
+  position: absolute;
+  top: -7px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--text);
+  transform: translateX(-5px);
+  z-index: 3;
+  pointer-events: none;
+  transition: left 0.15s ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+/* "Now" divider */
 .rt-now {
   position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  background: rgba(255, 255, 255, 0.7);
-  transform: translateX(-1px);
+  top: -2px;
+  bottom: -6px;
+  width: 0;
+  border-left: 1px dashed rgba(255, 255, 255, 0.4);
   z-index: 2;
   pointer-events: none;
 }
 
 .rt-now-tag {
   position: absolute;
-  top: -16px;
-  left: 50%;
+  bottom: -18px;
+  left: 0;
   transform: translateX(-50%);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.4px;
-  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.6px;
+  color: var(--accent);
   text-transform: uppercase;
+  background: rgba(79, 195, 247, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .rt-labels {
   position: relative;
   height: 16px;
-  margin-top: 6px;
+  margin-top: 22px;
 }
 
 .rt-label {
@@ -928,9 +998,10 @@ button {
 }
 
 .radar-credit {
-  margin: 10px 0 0;
+  margin: 14px 0 0;
   font-size: 11px;
   color: var(--muted);
+  padding: 0 2px;
 }
 
 .radar-credit a,
